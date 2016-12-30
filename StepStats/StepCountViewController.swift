@@ -20,7 +20,7 @@ class StepCountViewController: UIViewController {
         setBackgroundColor()
     }
 
-    override func viewDidAppear(animated: Bool) {
+    override func viewDidAppear(_ animated: Bool) {
         fetchInformation()
     }
 
@@ -34,7 +34,7 @@ class StepCountViewController: UIViewController {
             welcomeDescription.text = "You've covered"
             stepsin24h.text = "steps in the last 24 hours"
             healthManager.fetchStepCount() { steps, success in
-                dispatch_async(dispatch_get_main_queue()) {
+                DispatchQueue.main.async {
                     if success {
                         self.stepCountLabel.text = String(Int(steps))
                     }
@@ -44,11 +44,11 @@ class StepCountViewController: UIViewController {
     }
 
     func setBackgroundColor() {
-        self.view.backgroundColor = UIColor.orangeColor()
+        self.view.backgroundColor = UIColor.orange
         let gradient = CAGradientLayer()
         gradient.frame = self.view.bounds
-        let lightColor = UIColor.yellowColor().CGColor
-        let darkColor = UIColor.redColor().CGColor
+        let lightColor = UIColor.yellow.cgColor
+        let darkColor = UIColor.red.cgColor
         gradient.colors = [lightColor, darkColor];
         gradient.locations = [0.25, 0.75]
         gradient.opacity = 0.4

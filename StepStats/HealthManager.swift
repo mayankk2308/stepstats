@@ -7,6 +7,30 @@
 //
 
 import HealthKit
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l < r
+  case (nil, _?):
+    return true
+  default:
+    return false
+  }
+}
+
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func > <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l > r
+  default:
+    return rhs < lhs
+  }
+}
+
 
 class HealthManager {
 
@@ -15,8 +39,8 @@ class HealthManager {
     func checkAuth() -> Bool {
         var success = true
         if HKHealthStore.isHealthDataAvailable() {
-            let stepCounter = NSSet(object: HKQuantityType.quantityTypeForIdentifier(HKQuantityTypeIdentifierStepCount)!)
-            kit.requestAuthorizationToShareTypes(nil, readTypes: stepCounter as? Set<HKObjectType>) { bool, error in
+            let stepCounter = NSSet(object: HKQuantityType.quantityType(forIdentifier: HKQuantityTypeIdentifier.stepCount)!)
+            kit.requestAuthorization(toShare: nil, read: stepCounter as? Set<HKObjectType>) { bool, error in
                 success = bool
             }
         }
@@ -26,19 +50,19 @@ class HealthManager {
         return success
     }
 
-    func fetchStepCount(completionHandler: (Double, Bool) -> Void) {
+    func fetchStepCount(_ completionHandler: @escaping (Double, Bool) -> Void) {
 
-        let today = NSDate()
-        let previousDay = today.dateByAddingTimeInterval(NSTimeInterval(-82400))
-        let type = HKSampleType.quantityTypeForIdentifier(HKQuantityTypeIdentifierStepCount)
-        let predicate = HKQuery.predicateForSamplesWithStartDate(previousDay, endDate: today, options: .None)
+        let today = Date()
+        let previousDay = today.addingTimeInterval(TimeInterval(-82400))
+        let type = HKSampleType.quantityType(forIdentifier: HKQuantityTypeIdentifier.stepCount)
+        let predicate = HKQuery.predicateForSamples(withStart: previousDay, end: today, options: HKQueryOptions())
         let query = HKSampleQuery(sampleType: type!, predicate: predicate, limit: 0, sortDescriptors: nil) { _, results, error in
             var steps: Double = 0
             if results?.count > 0
             {
                 for result in results as! [HKQuantitySample]
                 {
-                    steps += result.quantity.doubleValueForUnit(HKUnit.countUnit())
+                    steps += result.quantity.doubleValue(for: HKUnit.count())
                 }
                 completionHandler(steps, true)
             }
@@ -46,7 +70,7 @@ class HealthManager {
                 completionHandler(steps, false)
             }
         }
-        kit.executeQuery(query)
+        kit.execute(query)
     }
 
 }
